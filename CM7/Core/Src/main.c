@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "fatfs.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -45,6 +46,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 
+SD_HandleTypeDef hsd1;
+
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
@@ -56,12 +59,20 @@ void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_SDMMC1_SD_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+/* SD card parameters */
+#define SD_CARD_PATH "/"
+#define FILE_NAME "example.txt"
+
+/* Buffer size for reading data */
+#define BUFFER_SIZE 512
 
 /* USER CODE END 0 */
 
@@ -126,7 +137,48 @@ Error_Handler();
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
+  MX_SDMMC1_SD_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
+
+  // Create a new file
+  FIL file;
+  UINT bytesRead;
+  uint8_t test[BUFFER_SIZE] = "hello             \n";
+
+  // Mount the SD card
+  FATFS fs;
+  uint8_t mountRes;
+  mountRes = f_mount(&fs, SD_CARD_PATH, 1);
+  if ( mountRes != FR_OK) {
+	  // Error handling
+	  while (1) {
+		  // Handle the error
+	  }
+  }
+
+  if (f_open(&file, FILE_NAME, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK) {
+	  // Error handling
+//	  while (1) {
+//		  // Handle the error
+//	  }
+  }
+
+  // Write data to the file
+  const char* data = "Hello, world! GKN \n\r";
+  UINT bytesWritten;
+  if (f_write(&file, data, strlen(data), &bytesWritten) != FR_OK) {
+	  // Error handling
+//	  while (1) {
+//		  // Handle the error
+//	  }
+  }
+
+  // Close the file
+  f_close(&file);
+
+  // Unmount the SD card
+  f_mount(NULL, SD_CARD_PATH, 1);
 
   /* USER CODE END 2 */
 
@@ -137,6 +189,39 @@ Error_Handler();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    HAL_Delay(500);
+	HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
+
+
+	// Mount the SD card
+	if (f_mount(&fs, SD_CARD_PATH, 1) != FR_OK) {
+		// Error handling
+		while (1) {
+			// Handle the error
+		}
+	}
+
+	// Open the file for reading
+	if (f_open(&file, FILE_NAME, FA_READ) != FR_OK) {
+		// Error handling
+		while (1) {
+			// Handle the error
+		}
+	}
+
+	// Read file data
+	while (f_read(&file, test, BUFFER_SIZE, &bytesRead) == FR_OK && bytesRead > 0) {
+		// Process the read data here
+		// You can write your own code to handle the data
+	}
+
+	// Close the file
+	f_close(&file);
+
+	// Unmount the SD card
+	f_mount(NULL, SD_CARD_PATH, 1);
+
+	HAL_UART_Transmit(&huart1, test, 20, 100);
   }
   /* USER CODE END 3 */
 }
@@ -231,6 +316,37 @@ void PeriphCommonClock_Config(void)
 }
 
 /**
+  * @brief SDMMC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SDMMC1_SD_Init(void)
+{
+
+  /* USER CODE BEGIN SDMMC1_Init 0 */
+
+  /* USER CODE END SDMMC1_Init 0 */
+
+  /* USER CODE BEGIN SDMMC1_Init 1 */
+
+  /* USER CODE END SDMMC1_Init 1 */
+  hsd1.Instance = SDMMC1;
+  hsd1.Init.ClockEdge = SDMMC_CLOCK_EDGE_RISING;
+  hsd1.Init.ClockPowerSave = SDMMC_CLOCK_POWER_SAVE_DISABLE;
+  hsd1.Init.BusWide = SDMMC_BUS_WIDE_4B;
+  hsd1.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
+  hsd1.Init.ClockDiv = 8;
+  if (HAL_SD_Init(&hsd1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SDMMC1_Init 2 */
+
+  /* USER CODE END SDMMC1_Init 2 */
+
+}
+
+/**
   * @brief USART1 Initialization Function
   * @param None
   * @retval None
@@ -291,8 +407,19 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOI_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : uSD_Detect_Pin */
+  GPIO_InitStruct.Pin = uSD_Detect_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(uSD_Detect_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : CEC_CK_MCO1_Pin */
   GPIO_InitStruct.Pin = CEC_CK_MCO1_Pin;
@@ -301,6 +428,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStruct.Alternate = GPIO_AF0_MCO;
   HAL_GPIO_Init(CEC_CK_MCO1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : LED2_Pin */
+  GPIO_InitStruct.Pin = LED2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(LED2_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

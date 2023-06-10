@@ -53,6 +53,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
+void MX_GPIO_Init(void);
 void MX_USART1_UART_Init(void);
 
 /* USER CODE BEGIN EFP */
@@ -70,8 +71,6 @@ void MX_USART1_UART_Init(void);
 #define ULPI_D7_GPIO_Port GPIOB
 #define QSPI_BK2_IO2_Pin GPIO_PIN_9
 #define QSPI_BK2_IO2_GPIO_Port GPIOG
-#define SDIO1_D2_Pin GPIO_PIN_10
-#define SDIO1_D2_GPIO_Port GPIOC
 #define FMC_D25_Pin GPIO_PIN_1
 #define FMC_D25_GPIO_Port GPIOI
 #define FMC_D24_Pin GPIO_PIN_0
@@ -84,8 +83,6 @@ void MX_USART1_UART_Init(void);
 #define HDMI_CEC_GPIO_Port GPIOB
 #define ETH_TX_EN_Pin GPIO_PIN_11
 #define ETH_TX_EN_GPIO_Port GPIOG
-#define SDIO1_D3_Pin GPIO_PIN_11
-#define SDIO1_D3_GPIO_Port GPIOC
 #define FMC_D26_Pin GPIO_PIN_2
 #define FMC_D26_GPIO_Port GPIOI
 #define FMC_D23_Pin GPIO_PIN_15
@@ -102,8 +99,6 @@ void MX_USART1_UART_Init(void);
 #define ETH_TXD1_GPIO_Port GPIOG
 #define SPDIF_RX0_Pin GPIO_PIN_7
 #define SPDIF_RX0_GPIO_Port GPIOD
-#define SDIO1_CK_Pin GPIO_PIN_12
-#define SDIO1_CK_GPIO_Port GPIOC
 #define FMC_D27_Pin GPIO_PIN_3
 #define FMC_D27_GPIO_Port GPIOI
 #define SAI1_SCK_A_Pin GPIO_PIN_5
@@ -118,8 +113,6 @@ void MX_USART1_UART_Init(void);
 #define QSPI_BK2_IO3_GPIO_Port GPIOG
 #define ETH_TXD0_Pin GPIO_PIN_13
 #define ETH_TXD0_GPIO_Port GPIOG
-#define SDIO1_CMD_Pin GPIO_PIN_2
-#define SDIO1_CMD_GPIO_Port GPIOD
 #define FMC_D2_Pin GPIO_PIN_0
 #define FMC_D2_GPIO_Port GPIOD
 #define STLINK_TX_Pin GPIO_PIN_10
@@ -136,10 +129,6 @@ void MX_USART1_UART_Init(void);
 #define SAI1_SD_A_GPIO_Port GPIOE
 #define FMC_D3_Pin GPIO_PIN_1
 #define FMC_D3_GPIO_Port GPIOD
-#define SDIO1_D0_Pin GPIO_PIN_8
-#define SDIO1_D0_GPIO_Port GPIOC
-#define SDIO1_D1_Pin GPIO_PIN_9
-#define SDIO1_D1_GPIO_Port GPIOC
 #define CEC_CK_MCO1_Pin GPIO_PIN_8
 #define CEC_CK_MCO1_GPIO_Port GPIOA
 #define SPI2_SCK_Pin GPIO_PIN_12
@@ -162,6 +151,8 @@ void MX_USART1_UART_Init(void);
 #define FMC_A0_GPIO_Port GPIOF
 #define QSPI_BK1_NCS_Pin GPIO_PIN_6
 #define QSPI_BK1_NCS_GPIO_Port GPIOG
+#define LED1_Pin GPIO_PIN_12
+#define LED1_GPIO_Port GPIOI
 #define FMC_A3_Pin GPIO_PIN_3
 #define FMC_A3_GPIO_Port GPIOF
 #define FMC_BA0_Pin GPIO_PIN_4

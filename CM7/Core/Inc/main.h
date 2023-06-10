@@ -57,16 +57,32 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define SDIO1_D2_Pin GPIO_PIN_10
+#define SDIO1_D2_GPIO_Port GPIOC
+#define SDIO1_D3_Pin GPIO_PIN_11
+#define SDIO1_D3_GPIO_Port GPIOC
 #define OSC32_OUT_Pin GPIO_PIN_15
 #define OSC32_OUT_GPIO_Port GPIOC
 #define OSC32_IN_Pin GPIO_PIN_14
 #define OSC32_IN_GPIO_Port GPIOC
+#define SDIO1_CK_Pin GPIO_PIN_12
+#define SDIO1_CK_GPIO_Port GPIOC
+#define SDIO1_CMD_Pin GPIO_PIN_2
+#define SDIO1_CMD_GPIO_Port GPIOD
 #define STLINK_TX_Pin GPIO_PIN_10
 #define STLINK_TX_GPIO_Port GPIOA
 #define STLINK_RX_Pin GPIO_PIN_9
 #define STLINK_RX_GPIO_Port GPIOA
+#define uSD_Detect_Pin GPIO_PIN_8
+#define uSD_Detect_GPIO_Port GPIOI
+#define SDIO1_D0_Pin GPIO_PIN_8
+#define SDIO1_D0_GPIO_Port GPIOC
+#define SDIO1_D1_Pin GPIO_PIN_9
+#define SDIO1_D1_GPIO_Port GPIOC
 #define CEC_CK_MCO1_Pin GPIO_PIN_8
 #define CEC_CK_MCO1_GPIO_Port GPIOA
+#define LED2_Pin GPIO_PIN_13
+#define LED2_GPIO_Port GPIOI
 #define OSC_OUT_Pin GPIO_PIN_1
 #define OSC_OUT_GPIO_Port GPIOH
 #define OSC_IN_Pin GPIO_PIN_0
