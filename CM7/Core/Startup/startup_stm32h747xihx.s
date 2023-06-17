@@ -54,10 +54,10 @@ defined in linker script */
  * @retval : None
 */
 
-    .section  .text.Reset_Handler
-  .weak  Reset_Handler
-  .type  Reset_Handler, %function
-Reset_Handler:
+    .section  .text.Boot_Reset_Handler
+  .weak  Boot_Reset_Handler
+  .type  Boot_Reset_Handler, %function
+Boot_Reset_Handler:
   ldr   sp, =_estack      /* set stack pointer */
 
 /* Call the clock system initialization function.*/
@@ -96,9 +96,9 @@ LoopFillZerobss:
 /* Call static constructors */
     bl __libc_init_array
 /* Call the application's entry point.*/
-  bl  main
+  bl  boot_main
   bx  lr
-.size  Reset_Handler, .-Reset_Handler
+.size  Boot_Reset_Handler, .-Boot_Reset_Handler
 
 /**
  * @brief  This is the code that gets called when the processor receives an
@@ -126,7 +126,7 @@ Infinite_Loop:
 
 g_pfnVectors:
   .word  _estack
-  .word  Reset_Handler
+  .word  Boot_Reset_Handler
 
   .word  NMI_Handler
   .word  HardFault_Handler

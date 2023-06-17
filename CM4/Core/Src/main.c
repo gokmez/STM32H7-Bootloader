@@ -115,13 +115,48 @@ static void MX_TIM13_Init(void);
 static void MX_UART8_Init(void);
 static void MX_USB_OTG_HS_PCD_Init(void);
 /* USER CODE BEGIN PFP */
-
+static void goto_application( void );
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+static void goto_application(void)
+{
+  void (*app_reset_handler)(void) = (void*)(*((volatile uint32_t*) (0x08140000 + 4U)));
 
-/* SD card parameters */
+  __set_MSP(*(volatile uint32_t*) 0x08140000);
+  app_reset_handler();    //call the app reset handler
+
+//	HAL_MPU_Disable();
+//
+//	HAL_SuspendTick();
+//
+//	__disable_irq(); //disable interrupt
+//
+//	SysTick->CTRL = 0;  // Enabled in application
+//	SysTick->LOAD = 0;
+//	SysTick->VAL  = 0;
+//
+//	HAL_RCC_DeInit();
+//
+//	for(uint8_t i = 0; i < 8; i++) //clear all NVIC Enable and Pending registers
+//	{
+//	  NVIC->ICER[i]=0xFFFFFFFF;
+//	  NVIC->ICPR[i]=0xFFFFFFFF;
+//	}
+//
+//	__enable_irq();
+//
+//	void (*app_rst_handler)(void) = (void*)(*((volatile uint32_t*) (0x08140000 + 4U)));
+//	__set_MSP(*(__IO uint32_t*) 0x08140000);
+//
+//	__set_CONTROL(0); //priviage mode
+//	__set_PRIMASK(1);
+//
+//	SCB->VTOR = 0x08140000;
+//
+//	app_rst_handler();
+}
 
 
 /* USER CODE END 0 */
@@ -165,22 +200,30 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_ADC1_Init();
-  MX_ADC3_Init();
-  MX_ETH_Init();
-  MX_FMC_Init();
-  MX_HDMI_CEC_Init();
-  MX_QUADSPI_Init();
-  MX_RTC_Init();
-  MX_SAI1_Init();
-  MX_SPDIFRX1_Init();
-  MX_SPI2_Init();
-  MX_SPI5_Init();
-  MX_TIM8_Init();
-  MX_TIM13_Init();
-  MX_UART8_Init();
-  MX_USB_OTG_HS_PCD_Init();
-  /* USER CODE BEGIN 2 */
+//  MX_ADC1_Init();
+//  MX_ADC3_Init();
+//  MX_ETH_Init();
+//  MX_FMC_Init();
+//  MX_HDMI_CEC_Init();
+//  MX_QUADSPI_Init();
+//  MX_RTC_Init();
+//  MX_SAI1_Init();
+//  MX_SPDIFRX1_Init();
+//  MX_SPI2_Init();
+//  MX_SPI5_Init();
+//  MX_TIM8_Init();
+//  MX_TIM13_Init();
+//  MX_UART8_Init();
+//  MX_USB_OTG_HS_PCD_Init();
+  MX_GPIO_Init();
+//  /* USER CODE BEGIN 2 */
+  HAL_Delay(1000);
+//  HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
+//  HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin);
+  HAL_Delay(1000);
+//  HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
+//  HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin);
+  //goto_application();
 
   /* USER CODE END 2 */
 
@@ -191,8 +234,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	HAL_Delay(500);
-	HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+	HAL_Delay(1000);
+	HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
+	HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin);
   }
   /* USER CODE END 3 */
 }
@@ -1018,14 +1062,17 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOJ_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : LED1_Pin */
-  GPIO_InitStruct.Pin = LED1_Pin;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pins : LED3_Pin LED4_Pin */
+  GPIO_InitStruct.Pin = LED3_Pin|LED4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LED1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOI, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

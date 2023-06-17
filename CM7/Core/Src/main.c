@@ -27,7 +27,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+static void goto_application( void );
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -74,13 +74,76 @@ static void MX_SDMMC1_SD_Init(void);
 /* Buffer size for reading data */
 #define BUFFER_SIZE 512
 
+#define APPLICATION_ADDRESS 0x08040000
+
+typedef void (*pFunction)(void);
+
+
+/**
+  * @brief Jump to application from the Bootloader
+  * @retval None
+  */
+static void goto_application(void)
+{
+//  void (*app_reset_handler)(void) = (void*)(*((volatile uint32_t*) (0x08040000 + 4U)));
+//
+//  //__set_MSP(*(volatile uint32_t*) 0x08040000);
+//  app_reset_handler();    //call the app reset handler
+
+//	SCB_DisableDCache();
+//
+//	SCB_DisableICache();
+//
+//	HAL_MPU_Disable();
+//
+//	HAL_SuspendTick();
+//
+//	__disable_irq(); //disable interrupt
+//
+//	SysTick->CTRL = 0;  // Enabled in application
+//	SysTick->LOAD = 0;
+//	SysTick->VAL  = 0;
+//
+//	HAL_RCC_DeInit();
+//
+//	for(uint8_t i = 0; i < 8; i++) //clear all NVIC Enable and Pending registers
+//	{
+//	  NVIC->ICER[i]=0xFFFFFFFF;
+//	  NVIC->ICPR[i]=0xFFFFFFFF;
+//	}
+//
+//	__enable_irq();
+
+//	void (*app_reset_handler)(void) = (void*)(*((volatile uint32_t*) (0x08040000 + 4U)));
+//	__set_MSP(*(__IO uint32_t*) 0x08040000);
+//
+//	__set_CONTROL(0); //priviage mode
+//	__set_PRIMASK(1);
+//
+//	SCB->VTOR = 0x08040000;
+//
+//	app_reset_handler();
+
+	pFunction appEntry;
+	uint32_t appStack;
+
+	appStack = (uint32_t) *((__IO uint32_t*)APPLICATION_ADDRESS);
+	appEntry = (pFunction) *(__IO uint32_t*) (APPLICATION_ADDRESS + 4);
+//	__DMB();
+	SCB->VTOR = APPLICATION_ADDRESS;
+//	__DSB();
+//	SysTick->CTRL = 0x0;
+//	HAL_DeInit();
+	__set_MSP(appStack);
+	appEntry();
+}
 /* USER CODE END 0 */
 
 /**
   * @brief  The application entry point.
   * @retval int
   */
-int main(void)
+int boot_main(void)
 {
   /* USER CODE BEGIN 1 */
 
@@ -136,49 +199,57 @@ Error_Handler();
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART1_UART_Init();
-  MX_SDMMC1_SD_Init();
-  MX_FATFS_Init();
+//  MX_USART1_UART_Init();
+//  MX_SDMMC1_SD_Init();
+//  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
-  // Create a new file
-  FIL file;
-  UINT bytesRead;
-  uint8_t test[BUFFER_SIZE] = "hello             \n";
-
-  // Mount the SD card
-  FATFS fs;
-  uint8_t mountRes;
-  mountRes = f_mount(&fs, SD_CARD_PATH, 1);
-  if ( mountRes != FR_OK) {
-	  // Error handling
-	  while (1) {
-		  // Handle the error
-	  }
-  }
-
-  if (f_open(&file, FILE_NAME, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK) {
-	  // Error handling
+//  // Create a new file
+//  FIL file;
+//  UINT bytesRead;
+//  uint8_t test[BUFFER_SIZE] = "hello             \n";
+//
+//  // Mount the SD card
+//  FATFS fs;
+//  uint8_t mountRes;
+//  mountRes = f_mount(&fs, SD_CARD_PATH, 1);
+//  if ( mountRes != FR_OK) {
+//	  // Error handling
 //	  while (1) {
 //		  // Handle the error
 //	  }
-  }
+//  }
+//
+//  if (f_open(&file, FILE_NAME, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK) {
+//	  // Error handling
+////	  while (1) {
+////		  // Handle the error
+////	  }
+//  }
+//
+//  // Write data to the file
+//  const char* data = "Hello, world! GKN \n\r";
+//  UINT bytesWritten;
+//  if (f_write(&file, data, strlen(data), &bytesWritten) != FR_OK) {
+//	  // Error handling
+////	  while (1) {
+////		  // Handle the error
+////	  }
+//  }
+//
+//  // Close the file
+//  f_close(&file);
+//
+//  // Unmount the SD card
+//  f_mount(NULL, SD_CARD_PATH, 1);
 
-  // Write data to the file
-  const char* data = "Hello, world! GKN \n\r";
-  UINT bytesWritten;
-  if (f_write(&file, data, strlen(data), &bytesWritten) != FR_OK) {
-	  // Error handling
-//	  while (1) {
-//		  // Handle the error
-//	  }
-  }
-
-  // Close the file
-  f_close(&file);
-
-  // Unmount the SD card
-  f_mount(NULL, SD_CARD_PATH, 1);
+  HAL_Delay(1500);
+  HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
+  HAL_Delay(1500);
+  HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
+  goto_application();
 
   /* USER CODE END 2 */
 
@@ -189,39 +260,39 @@ Error_Handler();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    HAL_Delay(500);
-	HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
+//    HAL_Delay(500);
+//    HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+//	HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
 
-
-	// Mount the SD card
-	if (f_mount(&fs, SD_CARD_PATH, 1) != FR_OK) {
-		// Error handling
-		while (1) {
-			// Handle the error
-		}
-	}
-
-	// Open the file for reading
-	if (f_open(&file, FILE_NAME, FA_READ) != FR_OK) {
-		// Error handling
-		while (1) {
-			// Handle the error
-		}
-	}
-
-	// Read file data
-	while (f_read(&file, test, BUFFER_SIZE, &bytesRead) == FR_OK && bytesRead > 0) {
-		// Process the read data here
-		// You can write your own code to handle the data
-	}
-
-	// Close the file
-	f_close(&file);
-
-	// Unmount the SD card
-	f_mount(NULL, SD_CARD_PATH, 1);
-
-	HAL_UART_Transmit(&huart1, test, 20, 100);
+//	// Mount the SD card
+//	if (f_mount(&fs, SD_CARD_PATH, 1) != FR_OK) {
+//		// Error handling
+//		while (1) {
+//			// Handle the error
+//		}
+//	}
+//
+//	// Open the file for reading
+//	if (f_open(&file, FILE_NAME, FA_READ) != FR_OK) {
+//		// Error handling
+//		while (1) {
+//			// Handle the error
+//		}
+//	}
+//
+//	// Read file data
+//	while (f_read(&file, test, BUFFER_SIZE, &bytesRead) == FR_OK && bytesRead > 0) {
+//		// Process the read data here
+//		// You can write your own code to handle the data
+//	}
+//
+//	// Close the file
+//	f_close(&file);
+//
+//	// Unmount the SD card
+//	f_mount(NULL, SD_CARD_PATH, 1);
+//
+//	HAL_UART_Transmit(&huart1, test, 20, 100);
   }
   /* USER CODE END 3 */
 }
@@ -256,9 +327,9 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 5;
-  RCC_OscInitStruct.PLL.PLLN = 48;
-  RCC_OscInitStruct.PLL.PLLP = 2;
+  RCC_OscInitStruct.PLL.PLLM = 4;
+  RCC_OscInitStruct.PLL.PLLN = 41;
+  RCC_OscInitStruct.PLL.PLLP = 4;
   RCC_OscInitStruct.PLL.PLLQ = 5;
   RCC_OscInitStruct.PLL.PLLR = 2;
   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
@@ -413,7 +484,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOH_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOI, LED1_Pin|LED2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : uSD_Detect_Pin */
   GPIO_InitStruct.Pin = uSD_Detect_Pin;
@@ -429,12 +500,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF0_MCO;
   HAL_GPIO_Init(CEC_CK_MCO1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LED2_Pin */
-  GPIO_InitStruct.Pin = LED2_Pin;
+  /*Configure GPIO pins : LED1_Pin LED2_Pin */
+  GPIO_InitStruct.Pin = LED1_Pin|LED2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LED2_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOI, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
