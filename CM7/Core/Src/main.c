@@ -22,7 +22,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -69,12 +70,16 @@ static void MX_SDMMC1_SD_Init(void);
 
 /* SD card parameters */
 #define SD_CARD_PATH "/"
-#define FILE_NAME "example.txt"
+#define FILE_NAME "EXAMPLE.TXT"
+//#define FILE_NAME_2 "test.jpg"
+//#define FILE_NAME_3 "testcopy.jpg"
+#define FILE_NAME_2 "test.hex"
+#define FILE_NAME_3 "testcopy.hex"
 
 /* Buffer size for reading data */
 #define BUFFER_SIZE 512
 
-#define APPLICATION_ADDRESS 0x08040000
+#define APPLICATION_ADDRESS 0x08020000
 
 typedef void (*pFunction)(void);
 
@@ -199,58 +204,51 @@ Error_Handler();
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-//  MX_USART1_UART_Init();
-//  MX_SDMMC1_SD_Init();
-//  MX_FATFS_Init();
+  MX_USART1_UART_Init();
+  MX_SDMMC1_SD_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
-//  // Create a new file
-//  FIL file;
-//  UINT bytesRead;
-//  uint8_t test[BUFFER_SIZE] = "hello             \n";
-//
-//  // Mount the SD card
-//  FATFS fs;
-//  uint8_t mountRes;
-//  mountRes = f_mount(&fs, SD_CARD_PATH, 1);
-//  if ( mountRes != FR_OK) {
-//	  // Error handling
-//	  while (1) {
-//		  // Handle the error
-//	  }
-//  }
-//
-//  if (f_open(&file, FILE_NAME, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK) {
-//	  // Error handling
-////	  while (1) {
-////		  // Handle the error
-////	  }
-//  }
-//
-//  // Write data to the file
-//  const char* data = "Hello, world! GKN \n\r";
-//  UINT bytesWritten;
-//  if (f_write(&file, data, strlen(data), &bytesWritten) != FR_OK) {
-//	  // Error handling
-////	  while (1) {
-////		  // Handle the error
-////	  }
-//  }
-//
-//  // Close the file
-//  f_close(&file);
-//
-//  // Unmount the SD card
-//  f_mount(NULL, SD_CARD_PATH, 1);
+  // Create a new file
+  FIL file, file2;
+  UINT bytesRead;
+  UINT bytesWritten;
+  uint8_t test[BUFFER_SIZE] = "hello             \n\r";
 
-  HAL_Delay(1500);
-  HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
-  HAL_Delay(1500);
-  HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
+  // Mount the SD card
+  FATFS fs;
+  uint8_t mountRes, readByte[BUFFER_SIZE];
+
+  FSIZE_t file_size;
+
+  mountRes = f_mount(&fs, SD_CARD_PATH, 1);
+  if (mountRes == FR_OK) {
+	  if (f_open(&file, FILE_NAME_2, FA_READ) == FR_OK) {
+
+		  file_size = f_size(&file);
+
+		  sprintf(test, "Org: %lu", file_size);
+		  HAL_UART_Transmit(&huart1, test, 20, 100);
+
+		  if (f_open(&file2, FILE_NAME_3, FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
+			 while (f_read(&file, readByte, BUFFER_SIZE, &bytesRead) == FR_OK && bytesRead > 0) {
+				// Process the read data here
+				f_write(&file2, readByte, bytesRead, &bytesWritten);
+				memset(readByte, 0xFF, sizeof(readByte));
+			 }
+
+			 file_size = f_size(&file2);
+
+			 sprintf(test, "Copy: %lu", file_size);
+			 HAL_UART_Transmit(&huart1, test, 20, 100);
+
+			 f_close(&file2);
+		  }
+
+		  f_close(&file);
+	  }
+  }
   goto_application();
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -260,39 +258,6 @@ Error_Handler();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//    HAL_Delay(500);
-//    HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-//	HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
-
-//	// Mount the SD card
-//	if (f_mount(&fs, SD_CARD_PATH, 1) != FR_OK) {
-//		// Error handling
-//		while (1) {
-//			// Handle the error
-//		}
-//	}
-//
-//	// Open the file for reading
-//	if (f_open(&file, FILE_NAME, FA_READ) != FR_OK) {
-//		// Error handling
-//		while (1) {
-//			// Handle the error
-//		}
-//	}
-//
-//	// Read file data
-//	while (f_read(&file, test, BUFFER_SIZE, &bytesRead) == FR_OK && bytesRead > 0) {
-//		// Process the read data here
-//		// You can write your own code to handle the data
-//	}
-//
-//	// Close the file
-//	f_close(&file);
-//
-//	// Unmount the SD card
-//	f_mount(NULL, SD_CARD_PATH, 1);
-//
-//	HAL_UART_Transmit(&huart1, test, 20, 100);
   }
   /* USER CODE END 3 */
 }
@@ -409,7 +374,7 @@ static void MX_SDMMC1_SD_Init(void)
   hsd1.Init.ClockDiv = 8;
   if (HAL_SD_Init(&hsd1) != HAL_OK)
   {
-    Error_Handler();
+//    Error_Handler();
   }
   /* USER CODE BEGIN SDMMC1_Init 2 */
 
