@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include <string.h>
+#include "flash.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -73,8 +74,8 @@ static void MX_SDMMC1_SD_Init(void);
 #define FILE_NAME "EXAMPLE.TXT"
 //#define FILE_NAME_2 "test.jpg"
 //#define FILE_NAME_3 "testcopy.jpg"
-#define FILE_NAME_2 "test.hex"
-#define FILE_NAME_3 "testcopy.hex"
+#define FILE_NAME_2 "test.bin"
+#define FILE_NAME_3 "test2.bin"
 
 /* Buffer size for reading data */
 #define BUFFER_SIZE 512
@@ -230,21 +231,44 @@ Error_Handler();
 		  sprintf(test, "Org: %lu", file_size);
 		  HAL_UART_Transmit(&huart1, test, 20, 100);
 
-		  if (f_open(&file2, FILE_NAME_3, FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
-			 while (f_read(&file, readByte, BUFFER_SIZE, &bytesRead) == FR_OK && bytesRead > 0) {
-				// Process the read data here
-				f_write(&file2, readByte, bytesRead, &bytesWritten);
-				memset(readByte, 0xFF, sizeof(readByte));
-			 }
+		  //CM 7 App
+		  erase_app_memory(FLASH_BANK_1, FLASH_SECTOR_1, 7);
 
-			 file_size = f_size(&file2);
+		  uint32_t flashAdd = APPLICATION_ADDRESS;
+		  uint32_t addCNTR  = 0;
 
-			 sprintf(test, "Copy: %lu", file_size);
-			 HAL_UART_Transmit(&huart1, test, 20, 100);
-
-			 f_close(&file2);
+		  while (f_read(&file, readByte, BUFFER_SIZE, &bytesRead) == FR_OK && bytesRead > 0) {
+			  // Process the read data here
+			  for(uint32_t i=0; i<16; i++){
+				  Flash_write32B(readByte+(i*32), flashAdd+addCNTR);
+				  addCNTR += 32;
+			  }
+			  memset(readByte, 0xFF, sizeof(readByte));
 		  }
+		  f_close(&file);
+	  }
 
+	  if (f_open(&file, FILE_NAME_3, FA_READ) == FR_OK) {
+
+		  file_size = f_size(&file);
+
+		  sprintf(test, "Org: %lu", file_size);
+		  HAL_UART_Transmit(&huart1, test, 20, 100);
+
+		  //CM 4 App
+		  erase_app_memory(FLASH_BANK_2, FLASH_SECTOR_0, 8);
+
+		  uint32_t flashAdd = 0x08100000;
+		  uint32_t addCNTR  = 0;
+
+		  while (f_read(&file, readByte, BUFFER_SIZE, &bytesRead) == FR_OK && bytesRead > 0) {
+			  // Process the read data here
+			  for(uint32_t i=0; i<16; i++){
+				  Flash_write32B(readByte+(i*32), flashAdd+addCNTR);
+				  addCNTR += 32;
+			  }
+			  memset(readByte, 0xFF, sizeof(readByte));
+		  }
 		  f_close(&file);
 	  }
   }

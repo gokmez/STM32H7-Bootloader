@@ -53,6 +53,12 @@ default.size.stdout \
 OBJDUMP_LIST += \
 stm32h747i-bootloader_CM4.list \
 
+OBJCOPY_HEX += \
+stm32h747i-bootloader_CM4.hex \
+
+OBJCOPY_BIN += \
+stm32h747i-bootloader_CM4.bin \
+
 
 # All Target
 all: main-build
@@ -76,12 +82,22 @@ stm32h747i-bootloader_CM4.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_
 	@echo 'Finished building: $@'
 	@echo ' '
 
+stm32h747i-bootloader_CM4.hex: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O ihex $(EXECUTABLES) "stm32h747i-bootloader_CM4.hex"
+	@echo 'Finished building: $@'
+	@echo ' '
+
+stm32h747i-bootloader_CM4.bin: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "stm32h747i-bootloader_CM4.bin"
+	@echo 'Finished building: $@'
+	@echo ' '
+
 # Other Targets
 clean:
-	-$(RM) default.size.stdout stm32h747i-bootloader_CM4.elf stm32h747i-bootloader_CM4.list stm32h747i-bootloader_CM4.map
+	-$(RM) default.size.stdout stm32h747i-bootloader_CM4.bin stm32h747i-bootloader_CM4.elf stm32h747i-bootloader_CM4.hex stm32h747i-bootloader_CM4.list stm32h747i-bootloader_CM4.map
 	-@echo ' '
 
-secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
+secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_HEX) $(OBJCOPY_BIN)
 
 fail-specified-linker-script-missing:
 	@echo 'Error: Cannot find the specified linker script. Check the linker settings in the build configuration.'

@@ -1,8 +1,0 @@
-main.c:91:13:goto_application	1
-main.c:151:5:boot_main	12
-main.c:269:6:SystemClock_Config	4
-main.c:332:6:PeriphCommonClock_Config	2
-main.c:359:13:MX_SDMMC1_SD_Init	1
-main.c:390:13:MX_USART1_UART_Init	5
-main.c:438:13:MX_GPIO_Init	1
-main.c:487:6:Error_Handler	1
