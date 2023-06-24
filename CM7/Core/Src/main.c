@@ -18,18 +18,22 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "fatfs.h"
+#include "quadspi.h"
+#include "usart.h"
+#include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include "flash.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-static void goto_application( void );
+//static void gotoFirmware(uint32_t fwFlashStartAdd);
+//bool updateFirmware(const TCHAR* fwPath, uint32_t flashBank, uint32_t flashSector, uint32_t NbSectors, uint32_t fwFlashStartAdd);
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -48,26 +52,21 @@ static void goto_application( void );
 
 /* Private variables ---------------------------------------------------------*/
 
-SD_HandleTypeDef hsd1;
-
-UART_HandleTypeDef huart1;
-
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-void PeriphCommonClock_Config(void);
-static void MX_GPIO_Init(void);
-static void MX_USART1_UART_Init(void);
-static void MX_SDMMC1_SD_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+#include <string.h>
+#define SECTORS_COUNT 100
 
 /* SD card parameters */
 #define SD_CARD_PATH "/"
@@ -80,7 +79,8 @@ static void MX_SDMMC1_SD_Init(void);
 /* Buffer size for reading data */
 #define BUFFER_SIZE 512
 
-#define APPLICATION_ADDRESS 0x08020000
+#define FW_CM7_START_ADD 0x08020000
+#define FW_CM4_START_ADD 0x08100000
 
 typedef void (*pFunction)(void);
 
@@ -89,60 +89,93 @@ typedef void (*pFunction)(void);
   * @brief Jump to application from the Bootloader
   * @retval None
   */
-static void goto_application(void)
-{
-//  void (*app_reset_handler)(void) = (void*)(*((volatile uint32_t*) (0x08040000 + 4U)));
+//static void gotoFirmware(uint32_t fwFlashStartAdd)
+//{
+////  void (*app_reset_handler)(void) = (void*)(*((volatile uint32_t*) (0x08040000 + 4U)));
+////
+////  //__set_MSP(*(volatile uint32_t*) 0x08040000);
+////  app_reset_handler();    //call the app reset handler
 //
-//  //__set_MSP(*(volatile uint32_t*) 0x08040000);
-//  app_reset_handler();    //call the app reset handler
+////	SCB_DisableDCache();
+////
+////	SCB_DisableICache();
+////
+////	HAL_MPU_Disable();
+////
+////	HAL_SuspendTick();
+////
+////	__disable_irq(); //disable interrupt
+////
+////	SysTick->CTRL = 0;  // Enabled in application
+////	SysTick->LOAD = 0;
+////	SysTick->VAL  = 0;
+////
+////	HAL_RCC_DeInit();
+////
+////	for(uint8_t i = 0; i < 8; i++) //clear all NVIC Enable and Pending registers
+////	{
+////	  NVIC->ICER[i]=0xFFFFFFFF;
+////	  NVIC->ICPR[i]=0xFFFFFFFF;
+////	}
+////
+////	__enable_irq();
+//
+////	void (*app_reset_handler)(void) = (void*)(*((volatile uint32_t*) (0x08040000 + 4U)));
+////	__set_MSP(*(__IO uint32_t*) 0x08040000);
+////
+////	__set_CONTROL(0); //priviage mode
+////	__set_PRIMASK(1);
+////
+////	SCB->VTOR = 0x08040000;
+////
+////	app_reset_handler();
+//
+//	pFunction appEntry;
+//	uint32_t appStack;
+//
+//	appStack = (uint32_t) *((__IO uint32_t*)fwFlashStartAdd);
+//	appEntry = (pFunction) *(__IO uint32_t*) (fwFlashStartAdd + 4);
+////	__DMB();
+//	SCB->VTOR = fwFlashStartAdd;
+////	__DSB();
+////	SysTick->CTRL = 0x0;
+////	HAL_DeInit();
+//	__set_MSP(appStack);
+//	appEntry();
+//}
 
-//	SCB_DisableDCache();
+
+//bool updateFirmware(const TCHAR* fwPath, uint32_t flashBank, uint32_t flashSector, uint32_t NbSectors, uint32_t fwFlashStartAdd)
+//{
+//	uint8_t binFileRes[50], readBytes[BUFFER_SIZE];
+//	UINT bytesRead;
+//	FSIZE_t file_size;
+//	FIL file;
+//	uint32_t flashAdd, addCNTR;
 //
-//	SCB_DisableICache();
+//	if (f_open(&file, fwPath, FA_READ) == FR_OK) {
 //
-//	HAL_MPU_Disable();
+//		file_size = f_size(&file);
 //
-//	HAL_SuspendTick();
+//		sprintf(binFileRes, ".bin Size: %lu bytes \n\r", file_size);
+//		HAL_UART_Transmit(&huart1, binFileRes, 20, 100);
 //
-//	__disable_irq(); //disable interrupt
+//		erase_app_memory(flashBank, flashSector, NbSectors);
 //
-//	SysTick->CTRL = 0;  // Enabled in application
-//	SysTick->LOAD = 0;
-//	SysTick->VAL  = 0;
+//		flashAdd = fwFlashStartAdd;
+//		addCNTR  = 0;
 //
-//	HAL_RCC_DeInit();
-//
-//	for(uint8_t i = 0; i < 8; i++) //clear all NVIC Enable and Pending registers
-//	{
-//	  NVIC->ICER[i]=0xFFFFFFFF;
-//	  NVIC->ICPR[i]=0xFFFFFFFF;
+//		while (f_read(&file, readBytes, BUFFER_SIZE, &bytesRead) == FR_OK && bytesRead > 0) {
+//			// Process the read data here
+//			for(uint32_t i=0; i<16; i++){
+//				Flash_write32B(readBytes+(i*32), flashAdd+addCNTR);
+//				addCNTR += 32;
+//			}
+//			memset(readBytes, 0xFF, sizeof(readBytes));
+//		}
+//		f_close(&file);
 //	}
-//
-//	__enable_irq();
-
-//	void (*app_reset_handler)(void) = (void*)(*((volatile uint32_t*) (0x08040000 + 4U)));
-//	__set_MSP(*(__IO uint32_t*) 0x08040000);
-//
-//	__set_CONTROL(0); //priviage mode
-//	__set_PRIMASK(1);
-//
-//	SCB->VTOR = 0x08040000;
-//
-//	app_reset_handler();
-
-	pFunction appEntry;
-	uint32_t appStack;
-
-	appStack = (uint32_t) *((__IO uint32_t*)APPLICATION_ADDRESS);
-	appEntry = (pFunction) *(__IO uint32_t*) (APPLICATION_ADDRESS + 4);
-//	__DMB();
-	SCB->VTOR = APPLICATION_ADDRESS;
-//	__DSB();
-//	SysTick->CTRL = 0x0;
-//	HAL_DeInit();
-	__set_MSP(appStack);
-	appEntry();
-}
+//}
 /* USER CODE END 0 */
 
 /**
@@ -157,6 +190,12 @@ int boot_main(void)
 /* USER CODE BEGIN Boot_Mode_Sequence_0 */
   int32_t timeout;
 /* USER CODE END Boot_Mode_Sequence_0 */
+
+  /* Enable I-Cache---------------------------------------------------------*/
+  SCB_EnableICache();
+
+  /* Enable D-Cache---------------------------------------------------------*/
+  SCB_EnableDCache();
 
 /* USER CODE BEGIN Boot_Mode_Sequence_1 */
   /* Wait until CPU2 boots and enters in stop mode or timeout*/
@@ -178,9 +217,6 @@ int boot_main(void)
 
   /* Configure the system clock */
   SystemClock_Config();
-
-/* Configure the peripherals common clocks */
-  PeriphCommonClock_Config();
 /* USER CODE BEGIN Boot_Mode_Sequence_2 */
 /* When system initialization is finished, Cortex-M7 will release Cortex-M4 by means of
 HSEM notification */
@@ -206,73 +242,67 @@ Error_Handler();
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
-  MX_SDMMC1_SD_Init();
-  MX_FATFS_Init();
+  MX_QUADSPI_Init();
   /* USER CODE BEGIN 2 */
 
-  // Create a new file
-  FIL file, file2;
-  UINT bytesRead;
-  UINT bytesWritten;
-  uint8_t test[BUFFER_SIZE] = "hello             \n\r";
+  uint8_t buffer_test[MEMORY_SECTOR_SIZE];
+  uint32_t var = 0;
+
+  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
+  CSP_QUADSPI_Init();
+
+  for (var = 0; var < MEMORY_SECTOR_SIZE; var++) {
+      buffer_test[var] = (var & 0xff);
+  }
+
+  for (var = 0; var < SECTORS_COUNT; var++) {
+
+      if (CSP_QSPI_EraseSector(var * MEMORY_SECTOR_SIZE,
+                               (var + 1) * MEMORY_SECTOR_SIZE - 1) != HAL_OK) {
+
+          while (1)
+              ;  //breakpoint - error detected
+      }
+
+      if (CSP_QSPI_WriteMemory(buffer_test, var * MEMORY_SECTOR_SIZE, sizeof(buffer_test)) != HAL_OK) {
+
+          while (1)
+              ;  //breakpoint - error detected
+      }
+
+  }
+
+  if (CSP_QSPI_EnableMemoryMappedMode() != HAL_OK) {
+
+      while (1)
+          ; //breakpoint - error detected
+  }
+
+  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
+
+  for (var = 0; var < SECTORS_COUNT; var++) {
+      if (memcmp(buffer_test,
+                 (uint8_t*) (0x90000000 + var * MEMORY_SECTOR_SIZE),
+                 MEMORY_SECTOR_SIZE) != HAL_OK) {
+          while (1)
+              ;  //breakpoint - error detected - otherwise QSPI works properly
+      }
+  }
 
   // Mount the SD card
-  FATFS fs;
-  uint8_t mountRes, readByte[BUFFER_SIZE];
-
-  FSIZE_t file_size;
-
-  mountRes = f_mount(&fs, SD_CARD_PATH, 1);
-  if (mountRes == FR_OK) {
-	  if (f_open(&file, FILE_NAME_2, FA_READ) == FR_OK) {
-
-		  file_size = f_size(&file);
-
-		  sprintf(test, "Org: %lu", file_size);
-		  HAL_UART_Transmit(&huart1, test, 20, 100);
-
-		  //CM 7 App
-		  erase_app_memory(FLASH_BANK_1, FLASH_SECTOR_1, 7);
-
-		  uint32_t flashAdd = APPLICATION_ADDRESS;
-		  uint32_t addCNTR  = 0;
-
-		  while (f_read(&file, readByte, BUFFER_SIZE, &bytesRead) == FR_OK && bytesRead > 0) {
-			  // Process the read data here
-			  for(uint32_t i=0; i<16; i++){
-				  Flash_write32B(readByte+(i*32), flashAdd+addCNTR);
-				  addCNTR += 32;
-			  }
-			  memset(readByte, 0xFF, sizeof(readByte));
-		  }
-		  f_close(&file);
-	  }
-
-	  if (f_open(&file, FILE_NAME_3, FA_READ) == FR_OK) {
-
-		  file_size = f_size(&file);
-
-		  sprintf(test, "Org: %lu", file_size);
-		  HAL_UART_Transmit(&huart1, test, 20, 100);
-
-		  //CM 4 App
-		  erase_app_memory(FLASH_BANK_2, FLASH_SECTOR_0, 8);
-
-		  uint32_t flashAdd = 0x08100000;
-		  uint32_t addCNTR  = 0;
-
-		  while (f_read(&file, readByte, BUFFER_SIZE, &bytesRead) == FR_OK && bytesRead > 0) {
-			  // Process the read data here
-			  for(uint32_t i=0; i<16; i++){
-				  Flash_write32B(readByte+(i*32), flashAdd+addCNTR);
-				  addCNTR += 32;
-			  }
-			  memset(readByte, 0xFF, sizeof(readByte));
-		  }
-		  f_close(&file);
-	  }
-  }
-  goto_application();
+//  FATFS fs;
+//  uint8_t mountRes;
+//
+//  mountRes = f_mount(&fs, SD_CARD_PATH, 1);
+//  if (mountRes == FR_OK) {
+//
+//	  updateFirmware(FILE_NAME_2, FLASH_BANK_1, FLASH_SECTOR_1, 7, FW_CM7_START_ADD);
+//
+//	  updateFirmware(FILE_NAME_3, FLASH_BANK_2, FLASH_SECTOR_0, 8, FW_CM4_START_ADD);
+//  }
+//  gotoFirmware(FW_CM7_START_ADD);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -316,12 +346,12 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 41;
-  RCC_OscInitStruct.PLL.PLLP = 4;
+  RCC_OscInitStruct.PLL.PLLM = 2;
+  RCC_OscInitStruct.PLL.PLLN = 16;
+  RCC_OscInitStruct.PLL.PLLP = 2;
   RCC_OscInitStruct.PLL.PLLQ = 5;
   RCC_OscInitStruct.PLL.PLLR = 2;
-  RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
+  RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_3;
   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
   RCC_OscInitStruct.PLL.PLLFRACN = 0;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
@@ -334,7 +364,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
                               |RCC_CLOCKTYPE_D3PCLK1|RCC_CLOCKTYPE_D1PCLK1;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV1;
@@ -342,162 +372,11 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV1;
   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
     Error_Handler();
   }
   HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSI, RCC_MCODIV_1);
-}
-
-/**
-  * @brief Peripherals Common Clock Configuration
-  * @retval None
-  */
-void PeriphCommonClock_Config(void)
-{
-  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
-
-  /** Initializes the peripherals clock
-  */
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADC;
-  PeriphClkInitStruct.PLL2.PLL2M = 2;
-  PeriphClkInitStruct.PLL2.PLL2N = 12;
-  PeriphClkInitStruct.PLL2.PLL2P = 2;
-  PeriphClkInitStruct.PLL2.PLL2Q = 2;
-  PeriphClkInitStruct.PLL2.PLL2R = 2;
-  PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
-  PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOMEDIUM;
-  PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
-  PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
-}
-
-/**
-  * @brief SDMMC1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_SDMMC1_SD_Init(void)
-{
-
-  /* USER CODE BEGIN SDMMC1_Init 0 */
-
-  /* USER CODE END SDMMC1_Init 0 */
-
-  /* USER CODE BEGIN SDMMC1_Init 1 */
-
-  /* USER CODE END SDMMC1_Init 1 */
-  hsd1.Instance = SDMMC1;
-  hsd1.Init.ClockEdge = SDMMC_CLOCK_EDGE_RISING;
-  hsd1.Init.ClockPowerSave = SDMMC_CLOCK_POWER_SAVE_DISABLE;
-  hsd1.Init.BusWide = SDMMC_BUS_WIDE_4B;
-  hsd1.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
-  hsd1.Init.ClockDiv = 8;
-  if (HAL_SD_Init(&hsd1) != HAL_OK)
-  {
-//    Error_Handler();
-  }
-  /* USER CODE BEGIN SDMMC1_Init 2 */
-
-  /* USER CODE END SDMMC1_Init 2 */
-
-}
-
-/**
-  * @brief USART1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USART1_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART1_Init 0 */
-
-  /* USER CODE END USART1_Init 0 */
-
-  /* USER CODE BEGIN USART1_Init 1 */
-
-  /* USER CODE END USART1_Init 1 */
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
-  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART1_Init 2 */
-
-  /* USER CODE END USART1_Init 2 */
-
-}
-
-/**
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_GPIO_Init(void)
-{
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-/* USER CODE BEGIN MX_GPIO_Init_1 */
-/* USER CODE END MX_GPIO_Init_1 */
-
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOI_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOI, LED1_Pin|LED2_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : uSD_Detect_Pin */
-  GPIO_InitStruct.Pin = uSD_Detect_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(uSD_Detect_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : CEC_CK_MCO1_Pin */
-  GPIO_InitStruct.Pin = CEC_CK_MCO1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF0_MCO;
-  HAL_GPIO_Init(CEC_CK_MCO1_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : LED1_Pin LED2_Pin */
-  GPIO_InitStruct.Pin = LED1_Pin|LED2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOI, &GPIO_InitStruct);
-
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */

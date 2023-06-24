@@ -49,12 +49,8 @@ extern "C" {
 
 /* USER CODE END EM */
 
-void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
-void MX_GPIO_Init(void);
-void MX_USART1_UART_Init(void);
 
 /* USER CODE BEGIN EFP */
 
@@ -69,8 +65,6 @@ void MX_USART1_UART_Init(void);
 #define FMC_NBL2_GPIO_Port GPIOI
 #define ULPI_D7_Pin GPIO_PIN_5
 #define ULPI_D7_GPIO_Port GPIOB
-#define QSPI_BK2_IO2_Pin GPIO_PIN_9
-#define QSPI_BK2_IO2_GPIO_Port GPIOG
 #define FMC_D25_Pin GPIO_PIN_1
 #define FMC_D25_GPIO_Port GPIOI
 #define FMC_D24_Pin GPIO_PIN_0
@@ -109,16 +103,10 @@ void MX_USART1_UART_Init(void);
 #define SAI1_SD_B_GPIO_Port GPIOE
 #define FMC_SDCAS_Pin GPIO_PIN_15
 #define FMC_SDCAS_GPIO_Port GPIOG
-#define QSPI_BK2_IO3_Pin GPIO_PIN_14
-#define QSPI_BK2_IO3_GPIO_Port GPIOG
 #define ETH_TXD0_Pin GPIO_PIN_13
 #define ETH_TXD0_GPIO_Port GPIOG
 #define FMC_D2_Pin GPIO_PIN_0
 #define FMC_D2_GPIO_Port GPIOD
-#define STLINK_TX_Pin GPIO_PIN_10
-#define STLINK_TX_GPIO_Port GPIOA
-#define STLINK_RX_Pin GPIO_PIN_9
-#define STLINK_RX_GPIO_Port GPIOA
 #define FMC_D21_Pin GPIO_PIN_13
 #define FMC_D21_GPIO_Port GPIOH
 #define FMC_D30_Pin GPIO_PIN_9
@@ -131,10 +119,6 @@ void MX_USART1_UART_Init(void);
 #define FMC_D3_GPIO_Port GPIOD
 #define CEC_CK_MCO1_Pin GPIO_PIN_8
 #define CEC_CK_MCO1_GPIO_Port GPIOA
-#define SPI2_SCK_Pin GPIO_PIN_12
-#define SPI2_SCK_GPIO_Port GPIOA
-#define PMOD_1_Pin GPIO_PIN_11
-#define PMOD_1_GPIO_Port GPIOA
 #define FMC_D31_Pin GPIO_PIN_10
 #define FMC_D31_GPIO_Port GPIOI
 #define ULPI_DIR_Pin GPIO_PIN_11
@@ -149,8 +133,6 @@ void MX_USART1_UART_Init(void);
 #define FMC_A1_GPIO_Port GPIOF
 #define FMC_A0_Pin GPIO_PIN_0
 #define FMC_A0_GPIO_Port GPIOF
-#define QSPI_BK1_NCS_Pin GPIO_PIN_6
-#define QSPI_BK1_NCS_GPIO_Port GPIOG
 #define LED3_Pin GPIO_PIN_14
 #define LED3_GPIO_Port GPIOI
 #define FMC_A3_Pin GPIO_PIN_3
@@ -167,50 +149,16 @@ void MX_USART1_UART_Init(void);
 #define FMC_A5_GPIO_Port GPIOF
 #define FMC_A4_Pin GPIO_PIN_4
 #define FMC_A4_GPIO_Port GPIOF
-#define ARD_D13_Pin GPIO_PIN_0
-#define ARD_D13_GPIO_Port GPIOK
-#define ARD_D10_Pin GPIO_PIN_1
-#define ARD_D10_GPIO_Port GPIOK
-#define QSPI_BK1_IO3_Pin GPIO_PIN_6
-#define QSPI_BK1_IO3_GPIO_Port GPIOF
-#define QSPI_BK1_IO2_Pin GPIO_PIN_7
-#define QSPI_BK1_IO2_GPIO_Port GPIOF
-#define PMOD_14_ARD_D3_Pin GPIO_PIN_8
-#define PMOD_14_ARD_D3_GPIO_Port GPIOF
-#define ARD_D12_Pin GPIO_PIN_11
-#define ARD_D12_GPIO_Port GPIOJ
 #define ULPI_STP_Pin GPIO_PIN_0
 #define ULPI_STP_GPIO_Port GPIOC
-#define ARD_A1_Pin GPIO_PIN_10
-#define ARD_A1_GPIO_Port GPIOF
-#define QSPI_BK1_IO1_Pin GPIO_PIN_9
-#define QSPI_BK1_IO1_GPIO_Port GPIOF
-#define ARD_D11_Pin GPIO_PIN_10
-#define ARD_D11_GPIO_Port GPIOJ
 #define ETH_MDC_SAI4_D1_Pin GPIO_PIN_1
 #define ETH_MDC_SAI4_D1_GPIO_Port GPIOC
-#define PMOD_3_Pin GPIO_PIN_2
-#define PMOD_3_GPIO_Port GPIOC
-#define PMOD_2_Pin GPIO_PIN_3
-#define PMOD_2_GPIO_Port GPIOC
-#define ARD_D0_Pin GPIO_PIN_9
-#define ARD_D0_GPIO_Port GPIOJ
-#define QSPI_BK2_IO0_Pin GPIO_PIN_2
-#define QSPI_BK2_IO0_GPIO_Port GPIOH
 #define ETH_MDIO_Pin GPIO_PIN_2
 #define ETH_MDIO_GPIO_Port GPIOA
 #define ETH_REF_CLK_Pin GPIO_PIN_1
 #define ETH_REF_CLK_GPIO_Port GPIOA
 #define FMC_D7_Pin GPIO_PIN_10
 #define FMC_D7_GPIO_Port GPIOE
-#define ARD_D1_Pin GPIO_PIN_8
-#define ARD_D1_GPIO_Port GPIOJ
-#define ARD_D6_Pin GPIO_PIN_7
-#define ARD_D6_GPIO_Port GPIOJ
-#define ARD_D9_Pin GPIO_PIN_6
-#define ARD_D9_GPIO_Port GPIOJ
-#define QSPI_BK2_IO1_Pin GPIO_PIN_3
-#define QSPI_BK2_IO1_GPIO_Port GPIOH
 #define ULPI_NXT_Pin GPIO_PIN_4
 #define ULPI_NXT_GPIO_Port GPIOH
 #define FMC_SDNWE_Pin GPIO_PIN_5
@@ -237,14 +185,8 @@ void MX_USART1_UART_Init(void);
 #define FMC_D1_GPIO_Port GPIOD
 #define FMC_D0_Pin GPIO_PIN_14
 #define FMC_D0_GPIO_Port GPIOD
-#define ARD_A4_Pin GPIO_PIN_2
-#define ARD_A4_GPIO_Port GPIOC
-#define ARD_A5_Pin GPIO_PIN_3
-#define ARD_A5_GPIO_Port GPIOC
 #define ETH_CRS_DV_Pin GPIO_PIN_7
 #define ETH_CRS_DV_GPIO_Port GPIOA
-#define QSPI_CLK_Pin GPIO_PIN_2
-#define QSPI_CLK_GPIO_Port GPIOB
 #define FMC_A6_Pin GPIO_PIN_12
 #define FMC_A6_GPIO_Port GPIOF
 #define FMC_A9_Pin GPIO_PIN_15
@@ -257,12 +199,6 @@ void MX_USART1_UART_Init(void);
 #define FMC_D17_GPIO_Port GPIOH
 #define FMC_D20_Pin GPIO_PIN_12
 #define FMC_D20_GPIO_Port GPIOH
-#define QSPI_BK1_IO0_Pin GPIO_PIN_11
-#define QSPI_BK1_IO0_GPIO_Port GPIOD
-#define ARD_A2_Pin GPIO_PIN_0
-#define ARD_A2_GPIO_Port GPIOA
-#define ARD_A3_Pin GPIO_PIN_1
-#define ARD_A3_GPIO_Port GPIOA
 #define ULPI_CK_Pin GPIO_PIN_5
 #define ULPI_CK_GPIO_Port GPIOA
 #define ETH_RXD0_Pin GPIO_PIN_4

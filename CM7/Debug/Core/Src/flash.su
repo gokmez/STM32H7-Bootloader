@@ -1,0 +1,2 @@
+../Core/Src/flash.c:3:19:erase_app_memory	56	static
+../Core/Src/flash.c:24:19:Flash_write32B	24	static
