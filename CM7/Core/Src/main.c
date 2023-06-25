@@ -36,6 +36,7 @@
 /* USER CODE BEGIN PTD */
 static void gotoFirmware(uint32_t fwFlashStartAdd);
 bool updateFirmware(const TCHAR* fwPath, uint32_t flashBank, uint32_t flashSector, uint32_t NbSectors, uint32_t fwFlashStartAdd);
+bool updateExternalFlash(const TCHAR* fwPath);
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -74,6 +75,7 @@ void SystemClock_Config(void);
 //#define FILE_NAME_3 "testcopy.jpg"
 #define FILE_NAME_2 "test.bin"
 #define FILE_NAME_3 "test2.bin"
+#define FILE_NAME_4 "test3.bin"
 
 /* Buffer size for reading data */
 #define BUFFER_SIZE 512
@@ -184,6 +186,46 @@ bool updateFirmware(const TCHAR* fwPath, uint32_t flashBank, uint32_t flashSecto
 
 	return true;
 }
+
+
+bool updateExternalFlash(const TCHAR* fwPath)
+{
+	uint8_t binFileRes[50], readBytes[BUFFER_SIZE];
+	UINT bytesRead;
+	FSIZE_t file_size;
+	FIL file;
+	uint32_t addCNTR;
+
+	if (f_open(&file, fwPath, FA_READ) == FR_OK) {
+
+		file_size = f_size(&file);
+
+		sprintf(binFileRes, ".bin Size: %lu bytes \n\r", file_size);
+		HAL_UART_Transmit(&huart1, binFileRes, 20, 100);
+
+		if (CSP_QSPI_Erase_Chip() != HAL_OK)
+		{
+			Error_Handler();
+		}
+
+		addCNTR  = 0;
+
+		while (f_read(&file, readBytes, BUFFER_SIZE, &bytesRead) == FR_OK && bytesRead > 0) {
+			// Process the read data here
+
+			if (CSP_QSPI_WriteMemory(readBytes, addCNTR, sizeof(readBytes)) != HAL_OK)
+			{
+				Error_Handler();
+			}
+
+			addCNTR += BUFFER_SIZE;
+			memset(readBytes, 0xFF, sizeof(readBytes));
+		}
+		f_close(&file);
+	}
+
+	return true;
+}
 /* USER CODE END 0 */
 
 /**
@@ -255,36 +297,36 @@ if ( timeout < 0 )
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
-	HAL_Delay(3000);
+//	HAL_Delay(3000);
 
 	if (CSP_QUADSPI_Init() != HAL_OK)
 	{
 		Error_Handler();
 	}
-
-	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
-	/****************** FOR SIMPLE WRITE READ ********************/
-	// Comment out these if you are using the EXT MEM BOOT
-
-	if (CSP_QSPI_Erase_Chip() != HAL_OK)
-	{
-		Error_Handler();
-	}
-
-	if (CSP_QSPI_WriteMemory(writebuf, 0, strlen (writebuf)) != HAL_OK)
-	{
-		Error_Handler();
-	}
-
-
-	if (CSP_QSPI_Read(readbuf, 0, 100) != HAL_OK)
-	{
-		Error_Handler();
-	}
-
-	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
+//
+//	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+//	HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
+//	/****************** FOR SIMPLE WRITE READ ********************/
+//	// Comment out these if you are using the EXT MEM BOOT
+//
+//	if (CSP_QSPI_Erase_Chip() != HAL_OK)
+//	{
+//		Error_Handler();
+//	}
+//
+//	if (CSP_QSPI_WriteMemory(writebuf, 0, strlen (writebuf)) != HAL_OK)
+//	{
+//		Error_Handler();
+//	}
+//
+//
+//	if (CSP_QSPI_Read(readbuf, 0, 100) != HAL_OK)
+//	{
+//		Error_Handler();
+//	}
+//
+//	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
+//	HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
 
 	/*************************************************/
 
@@ -299,6 +341,8 @@ if ( timeout < 0 )
 	  updateFirmware(FILE_NAME_2, FLASH_BANK_1, FLASH_SECTOR_1, 7, FW_CM7_START_ADD);
 
 	  updateFirmware(FILE_NAME_3, FLASH_BANK_2, FLASH_SECTOR_0, 8, FW_CM4_START_ADD);
+
+	  updateExternalFlash(FILE_NAME_4);
   }
   gotoFirmware(FW_CM7_START_ADD);
   /* USER CODE END 2 */
