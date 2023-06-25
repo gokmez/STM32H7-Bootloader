@@ -1,0 +1,3 @@
+eth.c:51:6:MX_ETH_Init	2
+eth.c:95:6:HAL_ETH_MspInit	2
+eth.c:150:6:HAL_ETH_MspDeInit	2

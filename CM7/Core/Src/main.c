@@ -18,7 +18,9 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "fatfs.h"
 #include "quadspi.h"
+#include "sdmmc.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -32,8 +34,8 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-//static void gotoFirmware(uint32_t fwFlashStartAdd);
-//bool updateFirmware(const TCHAR* fwPath, uint32_t flashBank, uint32_t flashSector, uint32_t NbSectors, uint32_t fwFlashStartAdd);
+static void gotoFirmware(uint32_t fwFlashStartAdd);
+bool updateFirmware(const TCHAR* fwPath, uint32_t flashBank, uint32_t flashSector, uint32_t NbSectors, uint32_t fwFlashStartAdd);
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -65,9 +67,6 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-#include <string.h>
-#define SECTORS_COUNT 100
-
 /* SD card parameters */
 #define SD_CARD_PATH "/"
 #define FILE_NAME "EXAMPLE.TXT"
@@ -84,98 +83,107 @@ void SystemClock_Config(void);
 
 typedef void (*pFunction)(void);
 
+uint8_t writebuf[25] = "HELLO WORLD from GKNN !";
+
+uint8_t readbuf[100];
+
+uint16_t number = 1234;
+uint8_t buf[5];
+
 
 /**
   * @brief Jump to application from the Bootloader
   * @retval None
   */
-//static void gotoFirmware(uint32_t fwFlashStartAdd)
-//{
-////  void (*app_reset_handler)(void) = (void*)(*((volatile uint32_t*) (0x08040000 + 4U)));
-////
-////  //__set_MSP(*(volatile uint32_t*) 0x08040000);
-////  app_reset_handler();    //call the app reset handler
+static void gotoFirmware(uint32_t fwFlashStartAdd)
+{
+//  void (*app_reset_handler)(void) = (void*)(*((volatile uint32_t*) (0x08040000 + 4U)));
 //
-////	SCB_DisableDCache();
-////
-////	SCB_DisableICache();
-////
-////	HAL_MPU_Disable();
-////
-////	HAL_SuspendTick();
-////
-////	__disable_irq(); //disable interrupt
-////
-////	SysTick->CTRL = 0;  // Enabled in application
-////	SysTick->LOAD = 0;
-////	SysTick->VAL  = 0;
-////
-////	HAL_RCC_DeInit();
-////
-////	for(uint8_t i = 0; i < 8; i++) //clear all NVIC Enable and Pending registers
-////	{
-////	  NVIC->ICER[i]=0xFFFFFFFF;
-////	  NVIC->ICPR[i]=0xFFFFFFFF;
-////	}
-////
-////	__enable_irq();
-//
-////	void (*app_reset_handler)(void) = (void*)(*((volatile uint32_t*) (0x08040000 + 4U)));
-////	__set_MSP(*(__IO uint32_t*) 0x08040000);
-////
-////	__set_CONTROL(0); //priviage mode
-////	__set_PRIMASK(1);
-////
-////	SCB->VTOR = 0x08040000;
-////
-////	app_reset_handler();
-//
-//	pFunction appEntry;
-//	uint32_t appStack;
-//
-//	appStack = (uint32_t) *((__IO uint32_t*)fwFlashStartAdd);
-//	appEntry = (pFunction) *(__IO uint32_t*) (fwFlashStartAdd + 4);
-////	__DMB();
-//	SCB->VTOR = fwFlashStartAdd;
-////	__DSB();
-////	SysTick->CTRL = 0x0;
-////	HAL_DeInit();
-//	__set_MSP(appStack);
-//	appEntry();
-//}
+//  //__set_MSP(*(volatile uint32_t*) 0x08040000);
+//  app_reset_handler();    //call the app reset handler
 
-
-//bool updateFirmware(const TCHAR* fwPath, uint32_t flashBank, uint32_t flashSector, uint32_t NbSectors, uint32_t fwFlashStartAdd)
-//{
-//	uint8_t binFileRes[50], readBytes[BUFFER_SIZE];
-//	UINT bytesRead;
-//	FSIZE_t file_size;
-//	FIL file;
-//	uint32_t flashAdd, addCNTR;
+//	SCB_DisableDCache();
 //
-//	if (f_open(&file, fwPath, FA_READ) == FR_OK) {
+//	SCB_DisableICache();
 //
-//		file_size = f_size(&file);
+//	HAL_MPU_Disable();
 //
-//		sprintf(binFileRes, ".bin Size: %lu bytes \n\r", file_size);
-//		HAL_UART_Transmit(&huart1, binFileRes, 20, 100);
+//	HAL_SuspendTick();
 //
-//		erase_app_memory(flashBank, flashSector, NbSectors);
+//	__disable_irq(); //disable interrupt
 //
-//		flashAdd = fwFlashStartAdd;
-//		addCNTR  = 0;
+//	SysTick->CTRL = 0;  // Enabled in application
+//	SysTick->LOAD = 0;
+//	SysTick->VAL  = 0;
 //
-//		while (f_read(&file, readBytes, BUFFER_SIZE, &bytesRead) == FR_OK && bytesRead > 0) {
-//			// Process the read data here
-//			for(uint32_t i=0; i<16; i++){
-//				Flash_write32B(readBytes+(i*32), flashAdd+addCNTR);
-//				addCNTR += 32;
-//			}
-//			memset(readBytes, 0xFF, sizeof(readBytes));
-//		}
-//		f_close(&file);
+//	HAL_RCC_DeInit();
+//
+//	for(uint8_t i = 0; i < 8; i++) //clear all NVIC Enable and Pending registers
+//	{
+//	  NVIC->ICER[i]=0xFFFFFFFF;
+//	  NVIC->ICPR[i]=0xFFFFFFFF;
 //	}
-//}
+//
+//	__enable_irq();
+
+//	void (*app_reset_handler)(void) = (void*)(*((volatile uint32_t*) (0x08040000 + 4U)));
+//	__set_MSP(*(__IO uint32_t*) 0x08040000);
+//
+//	__set_CONTROL(0); //priviage mode
+//	__set_PRIMASK(1);
+//
+//	SCB->VTOR = 0x08040000;
+//
+//	app_reset_handler();
+
+	pFunction appEntry;
+	uint32_t appStack;
+
+	appStack = (uint32_t) *((__IO uint32_t*)fwFlashStartAdd);
+	appEntry = (pFunction) *(__IO uint32_t*) (fwFlashStartAdd + 4);
+//	__DMB();
+	SCB->VTOR = fwFlashStartAdd;
+//	__DSB();
+//	SysTick->CTRL = 0x0;
+//	HAL_DeInit();
+	__set_MSP(appStack);
+	appEntry();
+}
+
+
+bool updateFirmware(const TCHAR* fwPath, uint32_t flashBank, uint32_t flashSector, uint32_t NbSectors, uint32_t fwFlashStartAdd)
+{
+	uint8_t binFileRes[50], readBytes[BUFFER_SIZE];
+	UINT bytesRead;
+	FSIZE_t file_size;
+	FIL file;
+	uint32_t flashAdd, addCNTR;
+
+	if (f_open(&file, fwPath, FA_READ) == FR_OK) {
+
+		file_size = f_size(&file);
+
+		sprintf(binFileRes, ".bin Size: %lu bytes \n\r", file_size);
+		HAL_UART_Transmit(&huart1, binFileRes, 20, 100);
+
+		erase_app_memory(flashBank, flashSector, NbSectors);
+
+		flashAdd = fwFlashStartAdd;
+		addCNTR  = 0;
+
+		while (f_read(&file, readBytes, BUFFER_SIZE, &bytesRead) == FR_OK && bytesRead > 0) {
+			// Process the read data here
+			for(uint32_t i=0; i<16; i++){
+				Flash_write32B(readBytes+(i*32), flashAdd+addCNTR);
+				addCNTR += 32;
+			}
+			memset(readBytes, 0xFF, sizeof(readBytes));
+		}
+		f_close(&file);
+	}
+
+	return true;
+}
 /* USER CODE END 0 */
 
 /**
@@ -203,7 +211,7 @@ int boot_main(void)
   while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
   if ( timeout < 0 )
   {
-  Error_Handler();
+  	Error_Handler();
   }
 /* USER CODE END Boot_Mode_Sequence_1 */
   /* MCU Configuration--------------------------------------------------------*/
@@ -231,7 +239,7 @@ timeout = 0xFFFF;
 while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) == RESET) && (timeout-- > 0));
 if ( timeout < 0 )
 {
-Error_Handler();
+	Error_Handler();
 }
 /* USER CODE END Boot_Mode_Sequence_2 */
 
@@ -243,66 +251,56 @@ Error_Handler();
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_QUADSPI_Init();
+  MX_SDMMC1_SD_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
-  uint8_t buffer_test[MEMORY_SECTOR_SIZE];
-  uint32_t var = 0;
+	HAL_Delay(3000);
 
-  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
-  CSP_QUADSPI_Init();
+	if (CSP_QUADSPI_Init() != HAL_OK)
+	{
+		Error_Handler();
+	}
 
-  for (var = 0; var < MEMORY_SECTOR_SIZE; var++) {
-      buffer_test[var] = (var & 0xff);
-  }
+	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
+	/****************** FOR SIMPLE WRITE READ ********************/
+	// Comment out these if you are using the EXT MEM BOOT
 
-  for (var = 0; var < SECTORS_COUNT; var++) {
+	if (CSP_QSPI_Erase_Chip() != HAL_OK)
+	{
+		Error_Handler();
+	}
 
-      if (CSP_QSPI_EraseSector(var * MEMORY_SECTOR_SIZE,
-                               (var + 1) * MEMORY_SECTOR_SIZE - 1) != HAL_OK) {
+	if (CSP_QSPI_WriteMemory(writebuf, 0, strlen (writebuf)) != HAL_OK)
+	{
+		Error_Handler();
+	}
 
-          while (1)
-              ;  //breakpoint - error detected
-      }
 
-      if (CSP_QSPI_WriteMemory(buffer_test, var * MEMORY_SECTOR_SIZE, sizeof(buffer_test)) != HAL_OK) {
+	if (CSP_QSPI_Read(readbuf, 0, 100) != HAL_OK)
+	{
+		Error_Handler();
+	}
 
-          while (1)
-              ;  //breakpoint - error detected
-      }
+	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
 
-  }
+	/*************************************************/
 
-  if (CSP_QSPI_EnableMemoryMappedMode() != HAL_OK) {
-
-      while (1)
-          ; //breakpoint - error detected
-  }
-
-  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
-
-  for (var = 0; var < SECTORS_COUNT; var++) {
-      if (memcmp(buffer_test,
-                 (uint8_t*) (0x90000000 + var * MEMORY_SECTOR_SIZE),
-                 MEMORY_SECTOR_SIZE) != HAL_OK) {
-          while (1)
-              ;  //breakpoint - error detected - otherwise QSPI works properly
-      }
-  }
 
   // Mount the SD card
-//  FATFS fs;
-//  uint8_t mountRes;
-//
-//  mountRes = f_mount(&fs, SD_CARD_PATH, 1);
-//  if (mountRes == FR_OK) {
-//
-//	  updateFirmware(FILE_NAME_2, FLASH_BANK_1, FLASH_SECTOR_1, 7, FW_CM7_START_ADD);
-//
-//	  updateFirmware(FILE_NAME_3, FLASH_BANK_2, FLASH_SECTOR_0, 8, FW_CM4_START_ADD);
-//  }
-//  gotoFirmware(FW_CM7_START_ADD);
+  FATFS fs;
+  uint8_t mountRes;
+
+  mountRes = f_mount(&fs, SD_CARD_PATH, 1);
+  if (mountRes == FR_OK) {
+
+	  updateFirmware(FILE_NAME_2, FLASH_BANK_1, FLASH_SECTOR_1, 7, FW_CM7_START_ADD);
+
+	  updateFirmware(FILE_NAME_3, FLASH_BANK_2, FLASH_SECTOR_0, 8, FW_CM4_START_ADD);
+  }
+  gotoFirmware(FW_CM7_START_ADD);
   /* USER CODE END 2 */
 
   /* Infinite loop */

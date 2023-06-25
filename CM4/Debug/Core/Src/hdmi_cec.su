@@ -1,0 +1,3 @@
+../Core/Src/hdmi_cec.c:31:6:MX_HDMI_CEC_Init	8	static
+../Core/Src/hdmi_cec.c:62:6:HAL_CEC_MspInit	248	static
+../Core/Src/hdmi_cec.c:105:6:HAL_CEC_MspDeInit	16	static
