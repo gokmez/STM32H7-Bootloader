@@ -1,6 +1,6 @@
-main.c:100:13:gotoFirmware	1
-main.c:156:6:updateFirmware	5
-main.c:191:6:updateExternalFlash	6
-main.c:235:5:boot_main	13
-main.c:365:6:SystemClock_Config	4
-main.c:432:6:Error_Handler	1
+main.c:90:13:gotoFirmware	1
+main.c:146:6:updateFirmware	5
+main.c:181:6:updateExternalFlash	6
+main.c:225:5:boot_main	13
+main.c:335:6:SystemClock_Config	4
+main.c:403:6:Error_Handler	1

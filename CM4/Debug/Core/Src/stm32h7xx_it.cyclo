@@ -7,4 +7,3 @@ stm32h7xx_it.c:144:6:SVC_Handler	1
 stm32h7xx_it.c:157:6:DebugMon_Handler	1
 stm32h7xx_it.c:170:6:PendSV_Handler	1
 stm32h7xx_it.c:183:6:SysTick_Handler	1
-stm32h7xx_it.c:204:6:CEC_IRQHandler	1

@@ -18,13 +18,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "eth.h"
-#include "hdmi_cec.h"
 #include "rtc.h"
-#include "sai.h"
-#include "spdifrx.h"
 #include "usb_otg.h"
-#include "fmc.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -105,15 +100,10 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_ETH_Init();
-  MX_FMC_Init();
-  MX_HDMI_CEC_Init();
   MX_RTC_Init();
-  MX_SAI1_Init();
-  MX_SPDIFRX1_Init();
   MX_USB_OTG_HS_PCD_Init();
   /* USER CODE BEGIN 2 */
-  MX_GPIO_Init();
+  //MX_GPIO_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -124,8 +114,8 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	HAL_Delay(1000);
-	HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
-	HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin);
+//	HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
+//	HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin);
   }
   /* USER CODE END 3 */
 }

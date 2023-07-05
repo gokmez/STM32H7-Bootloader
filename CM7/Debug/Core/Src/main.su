@@ -1,6 +1,6 @@
-../Core/Src/main.c:100:13:gotoFirmware	32	static,ignoring_inline_asm
-../Core/Src/main.c:156:6:updateFirmware	1176	static
-../Core/Src/main.c:191:6:updateExternalFlash	1152	static
-../Core/Src/main.c:235:5:boot_main	600	static,ignoring_inline_asm
-../Core/Src/main.c:365:6:SystemClock_Config	120	static
-../Core/Src/main.c:432:6:Error_Handler	4	static,ignoring_inline_asm
+../Core/Src/main.c:90:13:gotoFirmware	32	static,ignoring_inline_asm
+../Core/Src/main.c:146:6:updateFirmware	1176	static
+../Core/Src/main.c:181:6:updateExternalFlash	1152	static
+../Core/Src/main.c:225:5:boot_main	600	static,ignoring_inline_asm
+../Core/Src/main.c:335:6:SystemClock_Config	120	static
+../Core/Src/main.c:403:6:Error_Handler	4	static,ignoring_inline_asm

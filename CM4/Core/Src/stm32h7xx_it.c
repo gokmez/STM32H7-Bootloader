@@ -55,7 +55,7 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern CEC_HandleTypeDef hcec;
+
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -197,20 +197,6 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32h7xx.s).                    */
 /******************************************************************************/
-
-/**
-  * @brief This function handles HDMI-CEC global interrupt.
-  */
-void CEC_IRQHandler(void)
-{
-  /* USER CODE BEGIN CEC_IRQn 0 */
-
-  /* USER CODE END CEC_IRQn 0 */
-  HAL_CEC_IRQHandler(&hcec);
-  /* USER CODE BEGIN CEC_IRQn 1 */
-
-  /* USER CODE END CEC_IRQn 1 */
-}
 
 /* USER CODE BEGIN 1 */
 
